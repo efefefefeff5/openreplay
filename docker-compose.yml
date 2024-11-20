@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  # Service pour le Backend (OpenReplay API)
+  backend:
+    image: openreplay/openreplay-backend:latest  # L'image Docker officielle pour le backend OpenReplay
+    container_name: openreplay-backend
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yourpassword
+      - POSTGRES_DB=openreplay_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8080:8080"  # Le port de l'API backend
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - openreplay-network
+
+  # Service pour le Frontend (OpenReplay Dashboard)
+  frontend:
+    image: openreplay/openreplay-frontend:latest  # L'image Docker officielle pour le frontend OpenReplay
+    container_name: openreplay-frontend
+    environment:
+      - REACT_APP_BACKEND_URL=http://backend:8080  # L'URL de l'API backend
+    ports:
+      - "3000:3000"  # Le port d'accès à l'interface du frontend
+    depends_on:
+      - backend
+    networks:
+      - openreplay-network
+
+  # Service pour PostgreSQL (Base de données)
+  postgres:
+    image: postgres:latest  # Image officielle de PostgreSQL
+    container_name: openreplay-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=yourpassword
+      - POSTGRES_DB=openreplay_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data  # Volume persistant pour les données
+    networks:
+      - openreplay-network
+
+  # Service pour Redis (Cache)
+  redis:
+    image: redis:latest  # Image officielle de Redis
+    container_name: openreplay-redis
+    networks:
+      - openreplay-network
+
+networks:
+  openreplay-network:  # Réseau interne pour la communication entre les services
+
+volumes:
+  postgres-data:  # Volume persistant pour la base de données PostgreSQL
